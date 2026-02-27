@@ -8,9 +8,10 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { BookingActions } from "@/components/BookingActions";
 import { Button } from "@/components/ui/Button";
-import { Calendar, Heart, Mail, Music, TrendingUp } from "lucide-react";
+import { Calendar, Heart, Mail, Music, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { CreateBandModal } from "@/components/CreateBandModal";
 
 export default async function MusicianDashboardPage() {
   const session = await getServerSession(authOptions);
@@ -30,6 +31,16 @@ export default async function MusicianDashboardPage() {
           gig: { include: { venue: { include: { user: true } } } },
         },
         orderBy: { createdAt: "desc" },
+      },
+      bandMemberships: {
+        include: {
+          band: {
+            include: {
+              members: { include: { musician: { include: { user: true } } } },
+            },
+          },
+        },
+        orderBy: { joinedAt: "desc" },
       },
     },
   });
@@ -178,6 +189,51 @@ export default async function MusicianDashboardPage() {
                     )}
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* My Bands */}
+        <Card className="lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-jazz-600" />
+              My Bands
+            </CardTitle>
+            <CreateBandModal />
+          </div>
+          {profile.bandMemberships.length === 0 ? (
+            <p className="py-4 text-center text-sm text-gray-400">
+              You&apos;re not in any bands yet. Create one to get started!
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {profile.bandMemberships.map(({ band, isAdmin }) => (
+                <Link
+                  key={band.id}
+                  href={`/bands/${band.id}`}
+                  className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:bg-gray-50"
+                >
+                  {band.photoUrl ? (
+                    <img
+                      src={band.photoUrl}
+                      alt={band.name}
+                      className="h-10 w-10 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-jazz-100">
+                      <Users className="h-5 w-5 text-jazz-600" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{band.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {band.members.length} member{band.members.length !== 1 ? "s" : ""}
+                      {isAdmin && " · Leader"}
+                    </p>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

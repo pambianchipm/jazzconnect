@@ -29,6 +29,9 @@ export function Navbar() {
           <Link href="/venues" className="text-sm font-medium text-gray-600 hover:text-gray-900">
             Venues
           </Link>
+          <Link href="/bands" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+            Bands
+          </Link>
           <Link href="/gigs" className="text-sm font-medium text-gray-600 hover:text-gray-900">
             Gigs
           </Link>
@@ -74,6 +77,9 @@ export function Navbar() {
             </Link>
             <Link href="/venues" className="text-sm font-medium text-gray-600" onClick={() => setMenuOpen(false)}>
               Venues
+            </Link>
+            <Link href="/bands" className="text-sm font-medium text-gray-600" onClick={() => setMenuOpen(false)}>
+              Bands
             </Link>
             <Link href="/gigs" className="text-sm font-medium text-gray-600" onClick={() => setMenuOpen(false)}>
               Gigs

@@ -63,3 +63,29 @@ export const invitationSchema = z.object({
 export const bookingUpdateSchema = z.object({
   status: z.enum(["accepted", "declined"]),
 });
+
+export const bandSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500),
+  genres: z.string(),
+  photoUrl: z.string().url().or(z.literal("")),
+});
+
+export const bandAvailabilitySchema = z.object({
+  date: z.string().min(1),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  notes: z.string().max(300),
+});
+
+export const bandInterestSchema = z.object({
+  gigId: z.string().min(1),
+  bandId: z.string().min(1),
+  message: z.string().max(500).optional(),
+});
+
+export const bandInvitationSchema = z.object({
+  gigId: z.string().min(1),
+  bandId: z.string().min(1),
+  message: z.string().max(500).optional(),
+});

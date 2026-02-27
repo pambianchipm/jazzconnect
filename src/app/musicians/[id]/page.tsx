@@ -38,10 +38,21 @@ export default async function MusicianProfilePage({
           </div>
           <div className="mt-2 flex items-center gap-3">
             {profile.instagram && (
-              <span className="flex items-center gap-1 text-sm text-gray-500">
+              <a
+                href={
+                  profile.instagram.startsWith("http")
+                    ? profile.instagram
+                    : `https://instagram.com/${profile.instagram.replace(/^@/, "")}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm text-pink-500 hover:underline"
+              >
                 <Instagram className="h-4 w-4" />
-                {profile.instagram}
-              </span>
+                {profile.instagram.startsWith("http")
+                  ? profile.instagram
+                  : `@${profile.instagram.replace(/^@/, "")}`}
+              </a>
             )}
             {profile.website && (
               <a

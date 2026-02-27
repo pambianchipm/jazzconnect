@@ -82,6 +82,7 @@ model MusicianProfile {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   gigInterests GigInterest[]
   invitations  Invitation[]
+  bandMemberships BandMembership[]
 }
 
 model VenueProfile {
@@ -124,6 +125,8 @@ model Gig {
   venue      VenueProfile @relation(fields: [venueId], references: [id], onDelete: Cascade)
   interests  GigInterest[]
   invitations Invitation[]
+  bandInterests  BandGigInterest[]
+  bandInvitations BandInvitation[]
 }
 
 model GigInterest {
@@ -154,4 +157,76 @@ model Invitation {
   musician MusicianProfile  @relation(fields: [musicianId], references: [id], onDelete: Cascade)
 
   @@unique([gigId, musicianId])
+}
+
+// ─── Band Models ─────────────────────────────────────────────────────
+
+model Band {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  genres      String   @default("") // comma-separated
+  photoUrl    String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members      BandMembership[]
+  gigInterests BandGigInterest[]
+  invitations  BandInvitation[]
+  availability BandAvailability[]
+}
+
+model BandMembership {
+  id         String   @id @default(cuid())
+  bandId     String
+  musicianId String
+  isAdmin    Boolean  @default(false)
+  joinedAt   DateTime @default(now())
+
+  band     Band            @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  musician MusicianProfile @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+
+  @@unique([bandId, musicianId])
+}
+
+model BandAvailability {
+  id        String   @id @default(cuid())
+  bandId    String
+  date      DateTime
+  startTime String
+  endTime   String
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+
+  band Band @relation(fields: [bandId], references: [id], onDelete: Cascade)
+}
+
+model BandGigInterest {
+  id        String   @id @default(cuid())
+  bandId    String
+  gigId     String
+  message   String   @default("")
+  status    String   @default("pending") // pending, accepted, declined
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  band Band @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  gig  Gig  @relation(fields: [gigId], references: [id], onDelete: Cascade)
+
+  @@unique([bandId, gigId])
+}
+
+model BandInvitation {
+  id        String   @id @default(cuid())
+  bandId    String
+  gigId     String
+  message   String   @default("")
+  status    String   @default("pending") // pending, accepted, declined
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  band Band @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  gig  Gig  @relation(fields: [gigId], references: [id], onDelete: Cascade)
+
+  @@unique([bandId, gigId])
 }

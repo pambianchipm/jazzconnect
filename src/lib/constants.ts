@@ -50,3 +50,5 @@ export const VENUE_TYPES = [
 export const GIG_STATUSES = ["open", "filled", "cancelled"] as const;
 export const INTEREST_STATUSES = ["pending", "accepted", "declined"] as const;
 export const INVITATION_STATUSES = ["pending", "accepted", "declined"] as const;
+export const BAND_INTEREST_STATUSES = ["pending", "accepted", "declined"] as const;
+export const BAND_INVITATION_STATUSES = ["pending", "accepted", "declined"] as const;
