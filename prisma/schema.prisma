@@ -45,7 +45,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ─── Application Models ─────────────────────────────────────────────
+// ─── Family Reunion Models ──────────────────────────────────────────
 
 model User {
   id            String    @id @default(cuid())
@@ -53,105 +53,74 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          String?   // "musician" | "venue"
-  onboarded     Boolean   @default(false)
+  familyName    String?
+  nickname      String?
+  isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts        Account[]
-  sessions        Session[]
-  musicianProfile MusicianProfile?
-  venueProfile    VenueProfile?
+  accounts   Account[]
+  sessions   Session[]
+  rsvps      Rsvp[]
+  feedPosts  FeedPost[]
+  winners    EventWinner[]
 }
 
-model MusicianProfile {
-  id          String  @id @default(cuid())
-  userId      String  @unique
-  bio         String  @default("")
-  instruments String  @default("") // comma-separated
-  genres      String  @default("") // comma-separated
-  instagram   String  @default("")
-  website     String  @default("")
-  photoUrl    String  @default("")
-  sampleTrackUrls String @default("") // comma-separated URLs
-  yearsExperience Int  @default(0)
-  available   Boolean @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gigInterests GigInterest[]
-  invitations  Invitation[]
-}
-
-model VenueProfile {
-  id          String  @id @default(cuid())
-  userId      String  @unique
-  name        String  @default("")
-  description String  @default("")
-  address     String  @default("")
-  lat         Float?
-  lng         Float?
-  hoursJson   String  @default("") // JSON string of operating hours
-  venueType   String  @default("") // restaurant, bar, lounge, club, etc.
-  capacity    Int     @default(0)
-  photoUrls   String  @default("") // comma-separated URLs
-  website     String  @default("")
-  phone       String  @default("")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gigs Gig[]
-}
-
-model Gig {
+model Event {
   id          String   @id @default(cuid())
-  venueId     String
   title       String
   description String   @default("")
+  location    String   @default("")
+  category    String   @default("general") // meal, game, outing, ceremony, free-time, general
   date        DateTime
-  startTime   String   // "19:00"
-  endTime     String   // "22:00"
-  genres      String   @default("") // comma-separated
-  instruments String   @default("") // comma-separated desired instruments
-  payMin      Int      @default(0)
-  payMax      Int      @default(0)
-  status      String   @default("open") // open, filled, cancelled
+  startTime   String   // "09:00"
+  endTime     String   // "11:00"
+  imageUrl    String   @default("")
+  isAllDay    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  venue      VenueProfile @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  interests  GigInterest[]
-  invitations Invitation[]
+  rsvps   Rsvp[]
+  winners EventWinner[]
 }
 
-model GigInterest {
-  id          String   @id @default(cuid())
-  gigId       String
-  musicianId  String
-  message     String   @default("")
-  status      String   @default("pending") // pending, accepted, declined
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Rsvp {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  status    String   @default("going") // going, maybe, not-going
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  gig      Gig              @relation(fields: [gigId], references: [id], onDelete: Cascade)
-  musician MusicianProfile  @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@unique([gigId, musicianId])
+  @@unique([userId, eventId])
 }
 
-model Invitation {
-  id          String   @id @default(cuid())
-  gigId       String
-  musicianId  String
-  message     String   @default("")
-  status      String   @default("pending") // pending, accepted, declined
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model EventWinner {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  place     Int      @default(1) // 1st, 2nd, 3rd
+  note      String   @default("")
+  createdAt DateTime @default(now())
 
-  gig      Gig              @relation(fields: [gigId], references: [id], onDelete: Cascade)
-  musician MusicianProfile  @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-  @@unique([gigId, musicianId])
+model FeedPost {
+  id        String   @id @default(cuid())
+  authorId  String
+  type      String   @default("update") // update, announcement, winner, photo
+  title     String   @default("")
+  content   String
+  imageUrl  String   @default("")
+  eventId   String?
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }

@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
@@ -10,6 +11,10 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+    }),
   ],
   callbacks: {
     async session({ session, user }) {
@@ -17,10 +22,11 @@ export const authOptions: NextAuthOptions = {
         session.user.id = user.id;
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, onboarded: true },
+          select: { isAdmin: true, familyName: true, nickname: true },
         });
-        session.user.role = dbUser?.role ?? null;
-        session.user.onboarded = dbUser?.onboarded ?? false;
+        session.user.isAdmin = dbUser?.isAdmin ?? false;
+        session.user.familyName = dbUser?.familyName ?? null;
+        session.user.nickname = dbUser?.nickname ?? null;
       }
       return session;
     },

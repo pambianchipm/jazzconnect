@@ -1,107 +1,105 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { Music, MapPin, Calendar, Users } from "lucide-react";
+import { Heart, Calendar, Trophy, Newspaper } from "lucide-react";
 import Link from "next/link";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session) {
+      router.replace("/schedule");
+    }
+  }, [session, router]);
+
+  if (status === "loading" || session) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-reunion-600" />
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-jazz-900 via-jazz-800 to-jazz-950 px-4 py-24 text-white sm:py-32">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-reunion-900 via-reunion-800 to-reunion-950 px-4 py-24 text-white sm:py-32">
         <div className="relative mx-auto max-w-4xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm backdrop-blur-sm">
-            <Music className="h-4 w-4 text-gold-400" />
-            <span>NYC&apos;s Jazz Gig Marketplace</span>
+            <Heart className="h-4 w-4 text-coral-400" />
+            <span>Welcome to the Family</span>
           </div>
           <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-6xl">
-            Where Jazz Musicians{" "}
-            <span className="text-gold-400">Meet the Stage</span>
+            Our Family Reunion{" "}
+            <span className="text-warmth-400">Starts Here</span>
           </h1>
-          <p className="mb-10 text-lg text-jazz-200 sm:text-xl">
-            Connect with the best jazz venues in New York City. Whether you&apos;re a
-            musician looking for gigs or a venue seeking talent — JazzConnect
-            brings the scene together.
+          <p className="mb-10 text-lg text-reunion-200 sm:text-xl">
+            Everything you need in one place — the schedule, events, games,
+            winners, and family updates. Sign in to join the fun.
           </p>
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            {session ? (
-              <Link href="/dashboard">
-                <Button size="lg" variant="secondary">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <Button size="lg" variant="secondary" onClick={() => signIn("google")}>
-                Get Started
-              </Button>
-            )}
-            <Link href="/gigs">
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                Browse Gigs
-              </Button>
-            </Link>
-          </div>
+          <Link href="/auth/signin">
+            <Button size="lg" variant="secondary">
+              Get Started
+            </Button>
+          </Link>
         </div>
       </section>
 
-      {/* How it works */}
+      {/* Features */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <h2 className="mb-12 text-center text-3xl font-bold">How It Works</h2>
+        <h2 className="mb-12 text-center text-3xl font-bold">
+          Everything in One App
+        </h2>
         <div className="grid gap-8 sm:grid-cols-3">
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-jazz-100">
-              <Users className="h-7 w-7 text-jazz-600" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-reunion-100">
+              <Calendar className="h-7 w-7 text-reunion-600" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">Create Your Profile</h3>
+            <h3 className="mb-2 text-lg font-semibold">Full Schedule</h3>
             <p className="text-sm text-gray-600">
-              Musicians showcase their instruments, genres, and experience.
-              Venues highlight their space and vibe.
+              See what&apos;s happening today and what&apos;s coming up.
+              Meals, games, outings — all in one timeline.
             </p>
           </div>
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gold-100">
-              <Calendar className="h-7 w-7 text-gold-600" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-warmth-100">
+              <Trophy className="h-7 w-7 text-warmth-600" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">Post & Browse Gigs</h3>
+            <h3 className="mb-2 text-lg font-semibold">Winners &amp; Events</h3>
             <p className="text-sm text-gray-600">
-              Venues post open gigs with dates, pay, and requirements.
-              Musicians browse and express interest.
+              Track who won the sack race, the cook-off, and every
+              competition. Bragging rights included.
             </p>
           </div>
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-green-100">
-              <MapPin className="h-7 w-7 text-green-600" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-coral-100">
+              <Newspaper className="h-7 w-7 text-coral-600" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">Match & Play</h3>
+            <h3 className="mb-2 text-lg font-semibold">Live Feed</h3>
             <p className="text-sm text-gray-600">
-              Accept interest or send invitations. Confirm bookings and hit the
-              stage at NYC&apos;s finest spots.
+              Announcements, updates, photos, and winner
+              declarations — all in a centralized feed.
             </p>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="bg-jazz-50 px-4 py-16">
+      <section className="bg-reunion-50 px-4 py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-2xl font-bold">Ready to Join the Scene?</h2>
+          <h2 className="mb-4 text-2xl font-bold">Ready to Join?</h2>
           <p className="mb-6 text-gray-600">
-            Whether you&apos;re a seasoned saxophonist or a cozy wine bar in the
-            Village, JazzConnect has a spot for you.
+            Sign in with your Google or Facebook account to access
+            the full reunion experience.
           </p>
-          {session ? (
-            <Link href="/dashboard">
-              <Button size="lg">Go to Dashboard</Button>
-            </Link>
-          ) : (
-            <Button size="lg" onClick={() => signIn("google")}>
-              Sign Up with Google
-            </Button>
-          )}
+          <Link href="/auth/signin">
+            <Button size="lg">Sign In Now</Button>
+          </Link>
         </div>
       </section>
     </div>
