@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ProgressIndicator } from "./components/ProgressIndicator";
@@ -19,16 +19,25 @@ import {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { data: session, update } = useSession();
+  const { data: session, status, update } = useSession();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<OnboardingFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (session?.user?.onboarded) {
-    router.replace("/dashboard");
-    return null;
+  useEffect(() => {
+    if (session?.user?.onboarded) {
+      router.replace("/dashboard");
+    }
+  }, [session?.user?.onboarded, router]);
+
+  if (status === "loading" || session?.user?.onboarded) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-jazz-600" />
+      </div>
+    );
   }
 
   const onChange = (updates: Partial<OnboardingFormData>) => {
