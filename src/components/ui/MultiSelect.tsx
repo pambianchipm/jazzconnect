@@ -6,6 +6,8 @@ import { useState } from "react";
 
 interface MultiSelectProps {
   label?: string;
+  error?: string;
+  required?: boolean;
   options: string[];
   selected: string[];
   onChange: (selected: string[]) => void;
@@ -15,6 +17,8 @@ interface MultiSelectProps {
 
 export function MultiSelect({
   label,
+  error,
+  required,
   options,
   selected,
   onChange,
@@ -34,12 +38,18 @@ export function MultiSelect({
   return (
     <div className={cn("space-y-1", className)}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700">{label}</label>
+        <label className="block text-sm font-medium text-gray-700">
+          {label}
+          {required && <span className="ml-0.5 text-red-500">*</span>}
+        </label>
       )}
       <div className="relative">
         <div
           onClick={() => setIsOpen(!isOpen)}
-          className="flex min-h-[38px] cursor-pointer flex-wrap gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus-within:border-jazz-500 focus-within:ring-1 focus-within:ring-jazz-500"
+          className={cn(
+            "flex min-h-[38px] cursor-pointer flex-wrap gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus-within:border-jazz-500 focus-within:ring-1 focus-within:ring-jazz-500",
+            error && "border-red-500 focus-within:border-red-500 focus-within:ring-red-500"
+          )}
         >
           {selected.length === 0 && (
             <span className="py-0.5 text-gray-400">{placeholder}</span>
@@ -81,6 +91,7 @@ export function MultiSelect({
           </div>
         )}
       </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

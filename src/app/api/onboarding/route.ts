@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     if (role === "musician") {
+      const data = parsed.data as { role: "musician"; bio: string; instruments: string; genres: string; instagram?: string; website?: string };
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
@@ -30,14 +31,17 @@ export async function POST(req: NextRequest) {
           onboarded: true,
           musicianProfile: {
             create: {
-              bio: parsed.data.bio || "",
-              instruments: parsed.data.instruments || "",
-              genres: parsed.data.genres || "",
+              bio: data.bio,
+              instruments: data.instruments,
+              genres: data.genres,
+              instagram: data.instagram || "",
+              website: data.website || "",
             },
           },
         },
       });
     } else {
+      const data = parsed.data as { role: "venue"; venueName: string; description: string; address: string; venueType: string; capacity?: number; website?: string; phone?: string };
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
@@ -45,11 +49,13 @@ export async function POST(req: NextRequest) {
           onboarded: true,
           venueProfile: {
             create: {
-              name: parsed.data.venueName || "",
-              description: parsed.data.description || "",
-              address: parsed.data.address || "",
-              venueType: parsed.data.venueType || "",
-              capacity: parsed.data.capacity || 0,
+              name: data.venueName,
+              description: data.description,
+              address: data.address,
+              venueType: data.venueType,
+              capacity: data.capacity || 0,
+              website: data.website || "",
+              phone: data.phone || "",
             },
           },
         },

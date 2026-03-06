@@ -3,58 +3,113 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { Select } from "@/components/ui/Select";
-import { MultiSelect } from "@/components/ui/MultiSelect";
-import { Card } from "@/components/ui/Card";
-import { Music, Building2 } from "lucide-react";
-import { GENRES, INSTRUMENTS, VENUE_TYPES } from "@/lib/constants";
+import { ProgressIndicator } from "./components/ProgressIndicator";
+import { StepRoleSelection } from "./components/StepRoleSelection";
+import { StepBasicInfo } from "./components/StepBasicInfo";
+import { StepSocialLinks } from "./components/StepSocialLinks";
+import { StepReview } from "./components/StepReview";
+import { OnboardingFormData, initialFormData } from "./types";
+import {
+  step1Schema,
+  step2MusicianSchema,
+  step2VenueSchema,
+  step3MusicianSchema,
+  step3VenueSchema,
+} from "./schemas";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, update } = useSession();
-  const [step, setStep] = useState<"role" | "profile">("role");
-  const [role, setRole] = useState<"musician" | "venue" | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<OnboardingFormData>(initialFormData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Musician fields
-  const [bio, setBio] = useState("");
-  const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-
-  // Venue fields
-  const [venueName, setVenueName] = useState("");
-  const [description, setDescription] = useState("");
-  const [address, setAddress] = useState("");
-  const [venueType, setVenueType] = useState("");
-  const [capacity, setCapacity] = useState("");
 
   if (session?.user?.onboarded) {
     router.replace("/dashboard");
     return null;
   }
 
+  const onChange = (updates: Partial<OnboardingFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
+  const validateStep = (step: number): boolean => {
+    let result;
+
+    switch (step) {
+      case 1:
+        result = step1Schema.safeParse({ role: formData.role });
+        break;
+      case 2:
+        result =
+          formData.role === "musician"
+            ? step2MusicianSchema.safeParse(formData)
+            : step2VenueSchema.safeParse(formData);
+        break;
+      case 3:
+        result =
+          formData.role === "musician"
+            ? step3MusicianSchema.safeParse(formData)
+            : step3VenueSchema.safeParse(formData);
+        break;
+      default:
+        return true;
+    }
+
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as string;
+        if (!fieldErrors[key]) {
+          fieldErrors[key] = issue.message;
+        }
+      }
+      setErrors(fieldErrors);
+      return false;
+    }
+
+    setErrors({});
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateStep(currentStep)) return;
+    setCurrentStep((s) => Math.min(s + 1, 4));
+  };
+
+  const handleBack = () => {
+    setErrors({});
+    setCurrentStep((s) => Math.max(s - 1, 1));
+  };
+
+  const goToStep = (step: number) => {
+    setErrors({});
+    setCurrentStep(step);
+  };
+
   const handleSubmit = async () => {
-    if (!role) return;
     setLoading(true);
-    setError("");
+    setSubmitError("");
 
     try {
-      const body: Record<string, any> = { role };
+      const body: Record<string, unknown> = { role: formData.role };
 
-      if (role === "musician") {
-        body.bio = bio;
-        body.instruments = selectedInstruments.join(", ");
-        body.genres = selectedGenres.join(", ");
+      if (formData.role === "musician") {
+        body.bio = formData.bio;
+        body.instruments = formData.instruments.join(", ");
+        body.genres = formData.genres.join(", ");
+        body.instagram = formData.instagram.replace(/^@/, "");
+        body.website = formData.website;
       } else {
-        body.venueName = venueName;
-        body.description = description;
-        body.address = address;
-        body.venueType = venueType;
-        body.capacity = parseInt(capacity) || 0;
+        body.venueName = formData.venueName;
+        body.description = formData.description;
+        body.address = formData.address;
+        body.venueType = formData.venueType;
+        body.capacity = parseInt(formData.capacity) || 0;
+        body.website = formData.website;
+        body.phone = formData.phone;
       }
 
       const res = await fetch("/api/onboarding", {
@@ -70,8 +125,8 @@ export default function OnboardingPage() {
 
       await update();
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -81,129 +136,47 @@ export default function OnboardingPage() {
     <div className="mx-auto max-w-lg px-4 py-12">
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold">Welcome to JazzConnect!</h1>
-        <p className="mt-2 text-gray-600">
-          {step === "role"
-            ? "First, tell us who you are"
-            : `Set up your ${role} profile`}
-        </p>
       </div>
 
-      {step === "role" ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card
-            hover
-            className={`cursor-pointer text-center ${role === "musician" ? "ring-2 ring-jazz-500" : ""}`}
-            onClick={() => setRole("musician")}
-          >
-            <Music className="mx-auto mb-3 h-10 w-10 text-jazz-600" />
-            <h3 className="font-semibold">I&apos;m a Musician</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Find gigs at NYC venues
-            </p>
-          </Card>
-          <Card
-            hover
-            className={`cursor-pointer text-center ${role === "venue" ? "ring-2 ring-jazz-500" : ""}`}
-            onClick={() => setRole("venue")}
-          >
-            <Building2 className="mx-auto mb-3 h-10 w-10 text-gold-600" />
-            <h3 className="font-semibold">I&apos;m a Venue</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Find musicians for your stage
-            </p>
-          </Card>
-          <div className="sm:col-span-2">
-            <Button
-              className="w-full"
-              disabled={!role}
-              onClick={() => setStep("profile")}
-            >
-              Continue
-            </Button>
-          </div>
-        </div>
-      ) : role === "musician" ? (
-        <div className="space-y-4">
-          <Textarea
-            id="bio"
-            label="Bio"
-            placeholder="Tell venues about yourself..."
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
-          <MultiSelect
-            label="Instruments"
-            options={[...INSTRUMENTS]}
-            selected={selectedInstruments}
-            onChange={setSelectedInstruments}
-            placeholder="Select instruments..."
-          />
-          <MultiSelect
-            label="Genres"
-            options={[...GENRES]}
-            selected={selectedGenres}
-            onChange={setSelectedGenres}
-            placeholder="Select genres..."
-          />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep("role")}>
-              Back
-            </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : "Complete Setup"}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <Input
-            id="venueName"
-            label="Venue Name"
-            placeholder="e.g. Blue Note"
-            value={venueName}
-            onChange={(e) => setVenueName(e.target.value)}
-          />
-          <Textarea
-            id="description"
-            label="Description"
-            placeholder="Describe your venue..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <Input
-            id="address"
-            label="Address"
-            placeholder="131 W 3rd St, New York, NY"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-          <Select
-            id="venueType"
-            label="Venue Type"
-            placeholder="Select type..."
-            options={VENUE_TYPES.map((t) => ({ value: t, label: t }))}
-            value={venueType}
-            onChange={(e) => setVenueType(e.target.value)}
-          />
-          <Input
-            id="capacity"
-            label="Capacity"
-            type="number"
-            placeholder="100"
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
-          />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep("role")}>
-              Back
-            </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : "Complete Setup"}
-            </Button>
-          </div>
-        </div>
+      <ProgressIndicator currentStep={currentStep} />
+
+      {currentStep === 1 && (
+        <StepRoleSelection
+          formData={formData}
+          onChange={onChange}
+          onNext={handleNext}
+          error={errors.role}
+        />
+      )}
+
+      {currentStep === 2 && (
+        <StepBasicInfo
+          formData={formData}
+          onChange={onChange}
+          errors={errors}
+          onNext={handleNext}
+          onBack={handleBack}
+        />
+      )}
+
+      {currentStep === 3 && (
+        <StepSocialLinks
+          formData={formData}
+          onChange={onChange}
+          errors={errors}
+          onNext={handleNext}
+          onBack={handleBack}
+        />
+      )}
+
+      {currentStep === 4 && (
+        <StepReview
+          formData={formData}
+          goToStep={goToStep}
+          onSubmit={handleSubmit}
+          loading={loading}
+          error={submitError}
+        />
       )}
     </div>
   );

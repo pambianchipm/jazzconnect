@@ -1,18 +1,29 @@
 import { z } from "zod";
 
-export const onboardingSchema = z.object({
-  role: z.enum(["musician", "venue"]),
-  // Musician fields
-  bio: z.string().max(500).optional(),
-  instruments: z.string().optional(),
-  genres: z.string().optional(),
-  // Venue fields
-  venueName: z.string().max(100).optional(),
-  description: z.string().max(500).optional(),
-  address: z.string().max(200).optional(),
-  venueType: z.string().optional(),
-  capacity: z.coerce.number().int().min(0).optional(),
+const musicianOnboardingSchema = z.object({
+  role: z.literal("musician"),
+  bio: z.string().min(1).max(500),
+  instruments: z.string().min(1),
+  genres: z.string().min(1),
+  instagram: z.string().max(100).optional().default(""),
+  website: z.string().url().or(z.literal("")).optional().default(""),
 });
+
+const venueOnboardingSchema = z.object({
+  role: z.literal("venue"),
+  venueName: z.string().min(1).max(100),
+  description: z.string().min(1).max(500),
+  address: z.string().min(1).max(200),
+  venueType: z.string().min(1),
+  capacity: z.coerce.number().int().min(0).optional().default(0),
+  website: z.string().url().or(z.literal("")).optional().default(""),
+  phone: z.string().max(20).optional().default(""),
+});
+
+export const onboardingSchema = z.discriminatedUnion("role", [
+  musicianOnboardingSchema,
+  venueOnboardingSchema,
+]);
 
 export const musicianProfileSchema = z.object({
   bio: z.string().max(500),
