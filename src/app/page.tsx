@@ -44,6 +44,11 @@ export default function HomePage() {
                 Browse Gigs
               </Button>
             </Link>
+            <Link href="/casino">
+              <Button size="lg" variant="outline" className="border-yellow-400/50 text-yellow-300 hover:bg-yellow-400/10">
+                ✨ WaifuCasino
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
